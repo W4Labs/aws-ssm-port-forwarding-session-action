@@ -6,13 +6,13 @@ const run = async () => {
   try {
     console.log("Start SSM Port Forwarding Session");
     const client = new SSMClient({
-			region: process.env.AWS_DEFAULT_REGION,
-			customUserAgent: "gha".concat("-",github.context.repo.repo)
-	});
-    
+      region: process.env.AWS_DEFAULT_REGION,
+      customUserAgent: "gha".concat("-", github.context.repo.repo),
+    });
+
     const params = SanitizeInputs();
     const command = new StartSessionCommand(params);
- 
+
     const data = await client.send(command);
     core.saveState("session-id", data.SessionId);
   } catch (err) {
@@ -22,25 +22,27 @@ const run = async () => {
 };
 
 function SanitizeInputs() {
+  const _targetId = core.getInput("target-id", { required: true });
+  const _portNumber = core.getInput("portNumber", { required: true });
+  const _localPortNumber = core.getInput("localPortNumber", { required: true });
+  const _host = core.getInput("host", { required: true });
 
-  const _targetId = core.getInput('target-id', { required: true });
-  const _portNumber = core.getInput('portNumber', { required: true });
-  const _localPortNumber = core.getInput('localPortNumber', { required: true });
-  
-  const _documentName = 'AWS-StartPortForwardingSession';
+  const _documentName = "AWS-StartPortForwardingSessionToRemoteHost";
 
   return {
     Target: _targetId,
     DocumentName: _documentName,
     Parameters: {
-      'portNumber': [
-        _portNumber,
-      ],
-      'localPortNumber': [
-        _localPortNumber,
-      ]
+      portNumber: [_portNumber],
+      localPortNumber: [_localPortNumber],
+      host: [_host],
     },
-    Reason: github.context.serverUrl + "/" + github.context.repo + "/actions/runs/" + github.context.runId.toString()
+    Reason:
+      github.context.serverUrl +
+      "/" +
+      github.context.repo +
+      "/actions/runs/" +
+      github.context.runId.toString(),
   };
 }
 
